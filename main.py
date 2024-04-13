@@ -4,64 +4,61 @@
 import pygame
 import random
 
-
 pygame.init()
+pygame.mouse.set_visible(False)
 
 FPS = 40
 clock = pygame.time.Clock()
 # Скорость и направление
-speed = [1, -1]
+speed = [1, 1]
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-TARGET_W = 400
-TARGET_H = 400
-SCREEN_W_MAX = SCREEN_WIDTH - TARGET_W
-SCREEN_H_MAX = SCREEN_HEIGHT - TARGET_H
 
 pygame.display.set_caption('Игра Тир')
 icon = pygame.image.load('images/icon.jpg')
 pygame.display.set_icon(icon)
 
+# Мишень
 target_img = pygame.image.load('images/target400x400.jpg')
 target_rect = target_img.get_rect()
-target_centr_x, target_centr_y = target_rect.width // 2, target_rect.height // 2
-target_pos = (SCREEN_W_MAX // 2, SCREEN_H_MAX // 2)
+edge_right = SCREEN_WIDTH - target_rect.width
+edge_bottom = SCREEN_HEIGHT - target_rect.height
 
+# Дырки
 hole_img = pygame.image.load('images/hole1.png').convert_alpha()
 hole_rect = hole_img.get_rect()
-hole_centr_x, hole_centr_y = hole_rect.width // 2, hole_rect.height // 2
-hole_pos = (0, 0)
+hole_pos = ()
 hole_show = False
 hole_list = []
 
-dx, dy = 0, 0
+# Прицел
+aim_img = pygame.image.load('images/aim.png').convert_alpha()
+aim_rect = aim_img.get_rect()
 
-main_font = pygame.font.Font('font/font.ttf', 65)
 font = pygame.font.Font('font/font.ttf', 18)
-title_record = font.render('record:', True, pygame.Color('purple'))
-
-# color = (random.randint(100, 255), random.randint(100, 255), random.randint(100, 255))
-color = (255, 255, 255)
+dx, dy = 0, 0
 record = ''
 zone = 0
 
 
 def score_per_shot(hole_, target):
-    return 10 - int(pow(((target[0] + target_centr_x - hole_[0]) ** 2
-                         + (target[1] + target_centr_y - hole_[1]) ** 2), 0.5) / hole_rect.width)
+    res = (10 - int(((target[0] + target_rect.width // 2 - hole_[0]) ** 2
+                     + (target[1] + target_rect.height // 2 - hole_[1]) ** 2)
+                    ** 0.5) // hole_rect.width)
+    return res
 
 
-screen.blit(target_img, target_pos)
-
+target_rect = target_rect.move((0, -100))
 while True:
-    screen.fill(color)
+    aim_rect.center = pygame.mouse.get_pos()
+    screen.fill(pygame.Color('white'))
     target_rect = target_rect.move(speed)
     target_pos = (target_rect.left + target_rect.right) // 2, (target_rect.top + target_rect.bottom) // 2
-    if target_pos[0] < 0 or target_pos[0] > SCREEN_W_MAX:
+    if target_pos[0] < 0 or target_pos[0] > edge_right:
         speed[0] = -speed[0]
-    if target_pos[1] < 0 or target_pos[1] > SCREEN_H_MAX:
+    if target_pos[1] < 0 or target_pos[1] > edge_bottom:
         speed[1] = -speed[1]
 
     for event in pygame.event.get():
@@ -70,19 +67,18 @@ while True:
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
             # позицию дырки определяем по положению курсора с небольшим разбросом
-            hole_pos = mouse_pos[0] - random.randint(-7, 8), mouse_pos[1] - random.randint(-7, 8)
+            hole_pos = (mouse_pos[0] - random.randint(-4, 5),
+                        mouse_pos[1] - random.randint(-4, 5))
+            hole_list.append((hole_pos[0] - hole_rect.center[0] - target_pos[0],
+                              hole_pos[1] - hole_rect.center[1] - target_pos[1]))
             zone = score_per_shot(hole_pos, target_pos)
-            hole_show = True
             record = f'Попадание в {zone}' if zone > 0 else 'Мимо'
-            dx = hole_pos[0] - hole_centr_x - target_pos[0]
-            dy = hole_pos[1] - hole_centr_y - target_pos[1]
-            hole_list.append((dx, dy, zone))
+            hole_show = True
 
     screen.blit(target_img, target_pos)
-    for h in hole_list:
-        hole_pos = target_pos[0] + h[0], target_pos[1] + h[1]
-        screen.blit(hole_img, hole_pos)
-    screen.blit(font.render(record, True, pygame.Color('black')), (40, 50))
+    for pos in hole_list:  # для всех дырок на мишени
+        screen.blit(hole_img, (target_pos[0] + pos[0], target_pos[1] + pos[1]))
+    screen.blit(font.render(record, True, pygame.Color('black')), (10, 10))
+    screen.blit(aim_img, aim_rect)
     pygame.display.flip()
     clock.tick(FPS)
-
