@@ -34,7 +34,7 @@ hole_rect = hole_img.get_rect()
 hole_centr_x, hole_centr_y = hole_rect.width // 2, hole_rect.height // 2
 hole_pos = (0, 0)
 hole_show = False
-print(hole_rect.width)
+hole_list = []
 
 dx, dy = 0, 0
 
@@ -58,9 +58,7 @@ screen.blit(target_img, target_pos)
 while True:
     screen.fill(color)
     target_rect = target_rect.move(speed)
-    hole_rect = hole_rect.move(speed)
     target_pos = (target_rect.left + target_rect.right) // 2, (target_rect.top + target_rect.bottom) // 2
-    hole_pos = (hole_rect.left + hole_rect.right) // 2, (hole_rect.top + hole_rect.bottom) // 2
     if target_pos[0] < 0 or target_pos[0] > SCREEN_W_MAX:
         speed[0] = -speed[0]
     if target_pos[1] < 0 or target_pos[1] > SCREEN_H_MAX:
@@ -71,16 +69,18 @@ while True:
             exit()
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
-            hole_pos = mouse_pos[0] - random.randint(2, 16), mouse_pos[1] - random.randint(2, 16)
+            # позицию дырки определяем по положению курсора с небольшим разбросом
+            hole_pos = mouse_pos[0] - random.randint(-7, 8), mouse_pos[1] - random.randint(-7, 8)
             zone = score_per_shot(hole_pos, target_pos)
             hole_show = True
             record = f'Попадание в {zone}' if zone > 0 else 'Мимо'
             dx = hole_pos[0] - hole_centr_x - target_pos[0]
             dy = hole_pos[1] - hole_centr_y - target_pos[1]
+            hole_list.append((dx, dy, zone))
 
     screen.blit(target_img, target_pos)
-    if hole_show:
-        hole_pos = target_pos[0] + dx, target_pos[1] + dy
+    for h in hole_list:
+        hole_pos = target_pos[0] + h[0], target_pos[1] + h[1]
         screen.blit(hole_img, hole_pos)
     screen.blit(font.render(record, True, pygame.Color('black')), (40, 50))
     pygame.display.flip()
