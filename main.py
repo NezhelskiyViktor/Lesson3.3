@@ -31,8 +31,11 @@ target_pos = (SCREEN_W_MAX // 2, SCREEN_H_MAX // 2)
 
 hole_img = pygame.image.load('images/hole1.png').convert_alpha()
 hole_rect = hole_img.get_rect()
+hole_centr_x, hole_centr_y = hole_rect.width // 2, hole_rect.height // 2
 hole_pos = (0, 0)
 hole_show = False
+print(hole_rect.width)
+
 dx, dy = 0, 0
 
 main_font = pygame.font.Font('font/font.ttf', 65)
@@ -46,12 +49,8 @@ zone = 0
 
 
 def score_per_shot(hole_, target):
-    global dx
-    dx = hole_[0] - target[0]
-    global dy
-    dy = hole_[1] - target[1]
     return 10 - int(pow(((target[0] + target_centr_x - hole_[0]) ** 2
-                         + (target[1] + target_centr_y - hole_[1]) ** 2), 0.5) / 20)
+                         + (target[1] + target_centr_y - hole_[1]) ** 2), 0.5) / hole_rect.width)
 
 
 screen.blit(target_img, target_pos)
@@ -76,6 +75,8 @@ while True:
             zone = score_per_shot(hole_pos, target_pos)
             hole_show = True
             record = f'Попадание в {zone}' if zone > 0 else 'Мимо'
+            dx = hole_pos[0] - hole_centr_x - target_pos[0]
+            dy = hole_pos[1] - hole_centr_y - target_pos[1]
 
     screen.blit(target_img, target_pos)
     if hole_show:
