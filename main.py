@@ -7,8 +7,10 @@ import random
 
 pygame.init()
 
-FPS = 60
+FPS = 40
 clock = pygame.time.Clock()
+# Скорость и направление
+speed = [1, -1]
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
@@ -23,33 +25,63 @@ icon = pygame.image.load('images/icon.jpg')
 pygame.display.set_icon(icon)
 
 target_img = pygame.image.load('images/target400x400.jpg')
+target_rect = target_img.get_rect()
+target_centr_x, target_centr_y = target_rect.width // 2, target_rect.height // 2
 target_pos = (SCREEN_W_MAX // 2, SCREEN_H_MAX // 2)
+
+hole_img = pygame.image.load('images/hole1.png').convert_alpha()
+hole_rect = hole_img.get_rect()
+hole_pos = (0, 0)
+hole_show = False
+dx, dy = 0, 0
+
+main_font = pygame.font.Font('font/font.ttf', 65)
+font = pygame.font.Font('font/font.ttf', 18)
+title_record = font.render('record:', True, pygame.Color('purple'))
 
 # color = (random.randint(100, 255), random.randint(100, 255), random.randint(100, 255))
 color = (255, 255, 255)
+record = ''
+zone = 0
 
 
-def score_per_shot(mouse, target):
-    return 10 - int(pow(((target[0] + 200 - mouse[0]) ** 2
-                         + (target[1] + 200 - mouse[1]) ** 2), 0.5) / 20)
+def score_per_shot(hole_, target):
+    global dx
+    dx = hole_[0] - target[0]
+    global dy
+    dy = hole_[1] - target[1]
+    return 10 - int(pow(((target[0] + target_centr_x - hole_[0]) ** 2
+                         + (target[1] + target_centr_y - hole_[1]) ** 2), 0.5) / 20)
 
 
 screen.blit(target_img, target_pos)
 
 while True:
     screen.fill(color)
+    target_rect = target_rect.move(speed)
+    hole_rect = hole_rect.move(speed)
+    target_pos = (target_rect.left + target_rect.right) // 2, (target_rect.top + target_rect.bottom) // 2
+    hole_pos = (hole_rect.left + hole_rect.right) // 2, (hole_rect.top + hole_rect.bottom) // 2
+    if target_pos[0] < 0 or target_pos[0] > SCREEN_W_MAX:
+        speed[0] = -speed[0]
+    if target_pos[1] < 0 or target_pos[1] > SCREEN_H_MAX:
+        speed[1] = -speed[1]
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             exit()
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
-            print(f'{score_per_shot(mouse_pos, target_pos)}')
-        #     if target_x < mouse_x < target_x + target_width and target_y < mouse_y < target_y + target_height:
-        #         target_x = random.randint(0, SCREEN_WIDTH - target_width)
-        #         target_y = random.randint(0, SCREEN_HEIGHT - target_height)
+            hole_pos = mouse_pos[0] - random.randint(2, 16), mouse_pos[1] - random.randint(2, 16)
+            zone = score_per_shot(hole_pos, target_pos)
+            hole_show = True
+            record = f'Попадание в {zone}' if zone > 0 else 'Мимо'
 
     screen.blit(target_img, target_pos)
-
+    if hole_show:
+        hole_pos = target_pos[0] + dx, target_pos[1] + dy
+        screen.blit(hole_img, hole_pos)
+    screen.blit(font.render(record, True, pygame.Color('black')), (40, 50))
     pygame.display.flip()
-#    clock.tick(FPS)
+    clock.tick(FPS)
 
