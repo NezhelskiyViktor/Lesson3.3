@@ -3,11 +3,13 @@
 """
 import pygame
 import random
+import math
+
 
 pygame.init()
 pygame.mouse.set_visible(False)
 
-FPS = 40
+FPS = 150
 clock = pygame.time.Clock()
 
 SCREEN_WIDTH = 800
@@ -21,11 +23,11 @@ pygame.display.set_icon(icon)
 # Мишень
 target_img = pygame.image.load('images/target400x400.jpg')
 target_rect = target_img.get_rect()
-# Скорость и направление движения мишени
-speed = [1, 1]
-# Граница перемещения мишени
-edge_right = SCREEN_WIDTH - target_rect.width
-edge_bottom = SCREEN_HEIGHT - target_rect.height
+# # Скорость и направление движения мишени
+# speed = [1, 1]
+# # Граница перемещения мишени
+# edge_right = SCREEN_WIDTH - target_rect.width
+# edge_bottom = SCREEN_HEIGHT - target_rect.height
 
 # Дырки
 hole_img = pygame.image.load('images/hole1.png').convert_alpha()
@@ -40,6 +42,10 @@ font = pygame.font.Font('font/font.ttf', 18)
 
 record = ''
 zone = 0
+# Новые переменные для синусоидального движения
+x = -400  # Начальная позиция по оси X
+amplitude = 100  # Амплитуда синусоиды
+frequency = 0.01  # Частота синусоиды
 
 
 def score_per_shot(hole_, target):
@@ -53,12 +59,23 @@ target_rect = target_rect.move((0, -100))
 while True:
     aim_rect.center = pygame.mouse.get_pos()
     screen.fill(pygame.Color('white'))
-    target_rect = target_rect.move(speed)
-    target_pos = (target_rect.left + target_rect.right) // 2, (target_rect.top + target_rect.bottom) // 2
-    if target_pos[0] < 0 or target_pos[0] > edge_right:
-        speed[0] = -speed[0]
-    if target_pos[1] < 0 or target_pos[1] > edge_bottom:
-        speed[1] = -speed[1]
+
+    # Обновляем позицию мишени для движения слева направо по синусоидальной траектории
+    # Вычисляем Y используя синусоиду
+    y = SCREEN_HEIGHT // 2 + math.sin(frequency * x) * amplitude - target_rect.height // 2
+    target_pos = (x, y)
+    x += 2  # Увеличиваем X для следующего кадра
+    if x > SCREEN_WIDTH:  # Если мишень достигла края экрана, начинаем снова
+        x = -400
+        hole_list = []
+
+    # target_rect = target_rect.move(speed)
+    # target_pos = ((target_rect.left + target_rect.right) // 2,
+    #               (target_rect.top + target_rect.bottom) // 2)
+    # if target_pos[0] < 0 or target_pos[0] > edge_right:
+    #     speed[0] = -speed[0]
+    # if target_pos[1] < 0 or target_pos[1] > edge_bottom:
+    #     speed[1] = -speed[1]
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
