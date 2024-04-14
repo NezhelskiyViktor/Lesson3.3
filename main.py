@@ -9,8 +9,6 @@ pygame.mouse.set_visible(False)
 
 FPS = 40
 clock = pygame.time.Clock()
-# Скорость и направление
-speed = [1, 1]
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
@@ -23,14 +21,15 @@ pygame.display.set_icon(icon)
 # Мишень
 target_img = pygame.image.load('images/target400x400.jpg')
 target_rect = target_img.get_rect()
+# Скорость и направление движения мишени
+speed = [1, 1]
+# Граница перемещения мишени
 edge_right = SCREEN_WIDTH - target_rect.width
 edge_bottom = SCREEN_HEIGHT - target_rect.height
 
 # Дырки
 hole_img = pygame.image.load('images/hole1.png').convert_alpha()
 hole_rect = hole_img.get_rect()
-hole_pos = ()
-hole_show = False
 hole_list = []
 
 # Прицел
@@ -38,7 +37,7 @@ aim_img = pygame.image.load('images/aim.png').convert_alpha()
 aim_rect = aim_img.get_rect()
 
 font = pygame.font.Font('font/font.ttf', 18)
-dx, dy = 0, 0
+
 record = ''
 zone = 0
 
@@ -73,7 +72,6 @@ while True:
                               hole_pos[1] - hole_rect.center[1] - target_pos[1]))
             zone = score_per_shot(hole_pos, target_pos)
             record = f'Попадание в {zone}' if zone > 0 else 'Мимо'
-            hole_show = True
 
     screen.blit(target_img, target_pos)
     for pos in hole_list:  # для всех дырок на мишени
