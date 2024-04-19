@@ -38,16 +38,18 @@ hole_list = []
 aim_img = pygame.image.load('images/aim.png').convert_alpha()
 aim_rect = aim_img.get_rect()
 
-font = pygame.font.Font('font/font.ttf', 18)
+font = pygame.font.Font('font/arialbi.ttf', 18)
 
-record = ''
+record = 'Нажмите <пробел> для начала игры'
 zone = 0
+shot_list = ''
 # Новые переменные для синусоидального движения
 x = -400  # Начальная позиция по оси X
 amplitude = 100  # Амплитуда синусоиды
 frequency = 0.01  # Частота синусоиды
 # Загрузка звукового файла
 shot_sound = pygame.mixer.Sound('wav/shot.wav')
+start_target = False
 
 
 def score_per_shot(hole_, target):
@@ -67,9 +69,11 @@ while True:
     y = SCREEN_HEIGHT // 2 + math.sin(frequency * x) * amplitude - target_rect.height // 2
     target_pos = (x, y)
     x += 2  # Увеличиваем X для следующего кадра
-    if x > SCREEN_WIDTH:  # Если мишень достигла края экрана, начинаем снова
+    if x > SCREEN_WIDTH or not start_target:  # Если мишень достигла края экрана, начинаем снова
         x = -400
         hole_list = []
+        shot_list = ''
+        start_target = False
 
     # target_rect = target_rect.move(speed)
     # target_pos = ((target_rect.left + target_rect.right) // 2,
@@ -82,7 +86,12 @@ while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             exit()
-        if event.type == pygame.MOUSEBUTTONDOWN:
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                start_target = not start_target
+
+        if start_target and event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
             # позицию дырки определяем по положению курсора с небольшим разбросом
             hole_pos = (mouse_pos[0] - random.randint(-4, 5),
@@ -90,12 +99,16 @@ while True:
             hole_list.append((hole_pos[0] - hole_rect.center[0] - target_pos[0],
                               hole_pos[1] - hole_rect.center[1] - target_pos[1]))
             zone = score_per_shot(hole_pos, target_pos)
-            record = f'Попадание в {zone}' if zone > 0 else 'Мимо'
+            shot = str(zone) if zone > 0 else ''
+
+            shot_list = shot_list + ' ' + shot
+            record = f'Попадание в {shot_list}'
             shot_sound.play()
 
-    screen.blit(target_img, target_pos)
-    for pos in hole_list:  # для всех дырок на мишени
-        screen.blit(hole_img, (target_pos[0] + pos[0], target_pos[1] + pos[1]))
+    if start_target:
+        screen.blit(target_img, target_pos)
+        for pos in hole_list:  # для всех дырок на мишени
+            screen.blit(hole_img, (target_pos[0] + pos[0], target_pos[1] + pos[1]))
     screen.blit(font.render(record, True, pygame.Color('black')), (10, 10))
     screen.blit(aim_img, aim_rect)
     pygame.display.flip()
