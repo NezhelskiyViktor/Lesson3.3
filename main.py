@@ -46,6 +46,8 @@ zone = 0
 x = -400  # Начальная позиция по оси X
 amplitude = 100  # Амплитуда синусоиды
 frequency = 0.01  # Частота синусоиды
+# Загрузка звукового файла
+shot_sound = pygame.mixer.Sound('wav/shot.wav')
 
 
 def score_per_shot(hole_, target):
@@ -89,6 +91,7 @@ while True:
                               hole_pos[1] - hole_rect.center[1] - target_pos[1]))
             zone = score_per_shot(hole_pos, target_pos)
             record = f'Попадание в {zone}' if zone > 0 else 'Мимо'
+            shot_sound.play()
 
     screen.blit(target_img, target_pos)
     for pos in hole_list:  # для всех дырок на мишени
